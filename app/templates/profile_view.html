@@ -1,13 +1,54 @@
 {% extends "base.html" %}
 
 
-{% block js %}
+{% block css %}
+<style type="text/css">
+  body{
+    padding-top: 40px;
+  }
+  
+  .content {
+    width: auto;
+    overflow: hidden;
+}
+
+.c1 {
+    overflow: hidden;
+}
+
+.content img {
+    margin-right: 15px;
+    float: left;
+}
+
+.cols {
+    background-color: #83ebfa;
+    border:2px solid black;
+    overflow:hidden;
+    width: 300px;
+    font-family: sans-serif;
+    font-size: 18px;
+}
+
+</style>
 {% endblock %}
 
 
 {% block main %}
-
-{{profile.first_name}}
-{{profile.last_name}}
-
+<div class="content">
+    <img src="{{ url_for('static',filename=profile.image)}}"style="max-height:500px,max-width:500px">
+    <div class="c1">
+        <h3 class=cols>{{profile.firstname}} {{profile.lastname}}</h3>
+        <br/>
+        <p class=cols>Today is: {{ curr_date }}</p>
+        <div class=cols>
+          <p>Username: {{profile.username}}</p>
+          <p>ID: {{profile.id}}</p>
+          <p>Sex: {{profile.sex}}</p>
+          <p>Age: {{profile.age}}</p>
+          <p>Highest Score: 17278</p>
+          <p>TDollars: 100000</p>
+        </div>
+    </div>
+</div>
 {% endblock %}

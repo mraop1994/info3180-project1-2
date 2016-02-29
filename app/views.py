@@ -1,118 +1,96 @@
-"""
-Flask Documentation:     http://flask.pocoo.org/docs/
-Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
-Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
-
-This file creates your application.
-"""
-
-from flask import render_template, request, redirect, url_for, jsonify, g, session, Flask, flash, abort
+import os, time, datetime, json
+from app import app, db
+from flask import render_template, request, redirect, url_for, jsonify, g, session, flash
 from flask.ext.wtf import Form 
-from wtforms.fields import TextField # other fields include PasswordField 
-from wtforms.validators import Required, Email
+from wtforms.fields import TextField, FileField, SelectField # other fields include PasswordField 
+from wtforms.validators import Required
 from app.models import Myprofile
 from app.forms import LoginForm
-from flask.ext.openid import OpenID
-from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, lm, oid
+
+
+SECRET_KEY="super secure key"
+app.config.from_object(__name__)
 
 
 class ProfileForm(Form):
-     first_name = TextField('First Name', validators=[Required()])
-     last_name = TextField('Last Name', validators=[Required()])
-     # evil, don't do this
-     image = TextField('Image', validators=[Required(), Email()])
+    image = FileField(u'Image File',  validators=[Required()])
+    firstname = TextField('First Name', validators = [Required()])
+    lastname = TextField('Last Name', validators = [Required()])
+    age = TextField('Age', validators = [Required()])
+    sex = SelectField(u'Sex', choices = [('Male', 'Male'), ('Female', 'Female')])
 
-
-@lm.user_loader
-def load_user(id):
-    return Myprofile.query.get(int(id))
-
-
-@app.before_request
-def before_request():
-    g.user = current_user
-
-
-###
-# Routing for your application.
-###
-
-@app.route('/login', methods=['GET', 'POST'])
-@oid.loginhandler
-def login():
-    # user = g.user
-    # if g.user is not None and g.user.is_authenticated():
-    #     return redirect(url_for('index'))
-    form = LoginForm()
-    print app.config['OPENID_PROVIDERS']
-    if form.validate_on_submit():
-        session['remember_me'] = form.remember_me.data
-        return oid.try_login(form.openid.data, ask_for=['nickname', 'email'])
-    return render_template('login.html', 
-                          title='Sign In',
-                          form=form,
-                          providers=app.config['OPENID_PROVIDERS'])
-
-
-
-
-@oid.after_login
-def after_login(resp):
-    if resp.email is None or resp.email == "":
-        flash('Invalid login. Please try again.')
-        return redirect(url_for('login'))
-    user = MyProfile.query.filter_by(email=resp.email).first()
-    if user is None:
-        nickname = resp.nickname
-        if nickname is None or nickname == "":
-            nickname = resp.email.split('@')[0]
-        user = MyProfile(nickname=nickname, email=resp.email)
-        db.session.add(user)
-        db.session.commit()
-    remember_me = False
-    if 'remember_me' in session:
-        remember_me = session['remember_me']
-        session.pop('remember_me', None)
-    login_user(user, remember = remember_me)
-    return redirect(request.args.get('next') or url_for('index'))
 
 @app.route('/')
 def home():
     """Render website's home page."""
     return render_template('home.html')
+    
 
-@app.route('/profile/', methods=['POST','GET'])
-def profile_add():
+@app.route('/login/', methods=['POST','GET'])
+def login():
+    form = LoginForm(request.form)
+    error = None
+    try:
+        if request.method == 'POST':
+            attempted_username = request.form['username']
+            db_username = Myprofile.query.filter(Myprofile.username == attempted_username).one()
+            attempted_password = request.form['password']
+            
+            if attempted_username == db_username.username and attempted_password == "password":
+                return redirect(url_for('profile_list'))
+            else:
+                error = 'Invalid credentials'
+        return render_template("login.html",error=error,form=form)
+    except Exception as e:
+        flash(e)
+        return render_template("login.html",error=error,form=form)
+
+
+@app.route('/profile/', methods = ['POST','GET'])
+def newprofile():
     if request.method == 'POST':
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
-
-        # write the information to the database
-        newprofile = Myprofile(first_name=first_name,
-                               last_name=last_name)
-        db.session.add(newprofile)
+        firstname = request.form['firstname']
+        lastname = request.form['lastname']
+        sex = request.form['sex']
+        age = request.form['age']
+        form = ProfileForm(request.form)
+        imagename = request.files[form.image.name].read()
+        UPLOAD_FOLDER = "/app/static/uploads"
+        file = request.files[form.image.name]
+        filename = file.filename
+        file.save(os.path.join(os.getcwd() + UPLOAD_FOLDER, filename))
+        username = firstname[:2] + lastname + age
+        newProfile = Myprofile(firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=filename)
+        db.session.add(newProfile)
         db.session.commit()
-
-        return "{} {} was added to the database".format(request.form['first_name'],
-                                             request.form['last_name'])
-
+        flash('New entry was successfully posted')
+        return redirect('/profile/'+str(Myprofile.query.filter_by(username=newProfile.username).first().id))
     form = ProfileForm()
-    return render_template('profile_add.html',
-                           form=form)
+    return render_template('registration.html',form=form)
+
 
 @app.route('/profiles/',methods=["POST","GET"])
 def profile_list():
-    profiles = Myprofile.query.all()
+    profiles = db.session.query(Myprofile).all()
     if request.method == "POST":
-        return jsonify({"age":4, "name":"John"})
-    return render_template('profile_list.html',
-                            profiles=profiles)
+        profilelisting=[]
+        for profiles in profiles:
+            profilelisting.append({'id':profiles.id,'username':profiles.username})
+        return jsonify(profiles=profilelisting)
+    else:
+        return render_template('profile_list.html',profiles=profiles)
 
-@app.route('/profile/<int:id>')
-def profile_view(id):
-    profile = Myprofile.query.get(id)
-    return render_template('profile_view.html',profile=profile)
+
+@app.route('/profile/<userid>')
+def profile_view(userid):
+    timeinfo = time.strftime("%a, %b %d %Y")
+    profile = Myprofile.query.filter(Myprofile.id==userid).one()
+    image = "/static/uploads" + profile.image
+    if request.method == 'POST':
+        return jsonify(id=profile.id,username=profile.username,image=image,sex=profile.sex, age=profile.age)
+    else:
+        profile={'id': profile.id,'username': profile.username,'firstname':profile.firstname,'lastname':profile.lastname, 'sex': profile.sex, 'age': profile.age}
+        return render_template('profile_view.html',profile=profile,curr_date=timeinfo)
 
 
 @app.route('/about/')
@@ -150,4 +128,4 @@ def page_not_found(error):
 
 
 if __name__ == '__main__':
-    app.run(debug=True,host="0.0.0.0",port="8888")
+    app.run()
