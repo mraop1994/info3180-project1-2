@@ -68,7 +68,6 @@ def newprofile():
                 userid = i[0] + 1
         else:
             userid = 6200
-        return "Hello"
         newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename)
         db.session.add(newProfile)
         db.session.commit()
@@ -96,10 +95,10 @@ def profile_view(userid):
     profile = Myprofile.query.filter_by(id=userid).first()
     image = url_for('static', filename='uploads/'+profile.image)
     if request.method == 'POST':
-        return jsonify(id=profile.id,username=profile.username,image=image,sex=profile.sex, age=profile.age)
+        return jsonify(id=profile.id,username=profile.username,image=image,sex=profile.sex, age=profile.age, profile_add_on=timeinfo, high_score=profile.high_score, tdollars=profile.tdollars)
     else:
-        profile_vars = {'id':profile.id, 'username':profile.username, 'image':image, 'age':profile.age, 'firstname':profile.firstname, 'lastname':profile.lastname, 'sex':profile.sex}
-    return render_template('profile_view.html',profile=profile_vars,curr_date=timeinfo)
+        profile_vars = {'id':profile.id, 'username':profile.username, 'image':image, 'age':profile.age, 'firstname':profile.firstname, 'lastname':profile.lastname, 'sex':profile.sex, 'profile_add_on':date,'highscore': profile.high_score, 'tdollars': profile.tdollars}
+    return render_template('profile_view.html',profile=profile_vars)
 
 
 @app.route('/about/')

@@ -40,14 +40,14 @@
     <div class="c1">
         <h3 class=cols>{{profile.firstname}} {{profile.lastname}}</h3>
         <br/>
-        <p class=cols>Today is: {{ curr_date }}</p>
+        <p class=cols>Profile Added on: {{profile.profile_add_on}}</p>
         <div class=cols>
           <p>Username: {{profile.username}}</p>
           <p>ID: {{profile.id}}</p>
           <p>Sex: {{profile.sex}}</p>
           <p>Age: {{profile.age}}</p>
-          <p>Highest Score: 17278</p>
-          <p>TDollars: 100000</p>
+          <p>Highest Score: {{profile.high_score}}</p>
+          <p>TDollars: {{profile.tdollars}}</p>
         </div>
     </div>
 </div>

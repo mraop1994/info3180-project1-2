@@ -7,6 +7,9 @@ class Myprofile(db.Model):
     age = db.Column(db.String(2))
     username = db.Column(db.String(20), unique=True)
     image = db.Column(db.String(200))
+    profile_add_on = db.Column(db.String(200))
+    high_score = db.Column(db.String(20))
+    tdollars = db.Column(db.String(200))
     
     def is_authenticated(self):
         return True
