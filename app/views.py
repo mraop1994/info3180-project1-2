@@ -63,17 +63,19 @@ def newprofile():
         image.save(os.path.join(os.getcwd() + UPLOAD_FOLDER, imagename))
         username = firstname[:1] + lastname + age + time.strftime("%Y")
         check = db.session.execute('SELECT max(id) from myprofile')
-        if check is not None:
+        if check is None:
+            userid = 6200
+            for i in check:
+                userid = i[0] + 1
+        else:
             for i in check:
                 userid = i[0] + 1
             return "Hello"
-    #     else:
-    #         userid = 6200
-    #     newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename)
-    #     db.session.add(newProfile)
-    #     db.session.commit()
-    #     flash('New entry was successfully posted')
-    #     return redirect('/profile/'+str(Myprofile.query.filter_by(username=newProfile.username).first().id))
+        newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename)
+        db.session.add(newProfile)
+        db.session.commit()
+        flash('New entry was successfully posted')
+        return redirect('/profile/'+str(Myprofile.query.filter_by(username=newProfile.username).first().id))
     form = ProfileForm()
     return render_template('registration.html',form=form)
 
