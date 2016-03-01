@@ -1,3 +1,3 @@
 from app import db
 
-db.createAll()
+db.create_all()
