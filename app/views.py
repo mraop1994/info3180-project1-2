@@ -63,14 +63,12 @@ def newprofile():
         image.save(os.path.join(os.getcwd() + UPLOAD_FOLDER, imagename))
         username = firstname[:1] + lastname + age + time.strftime("%Y")
         check = db.session.execute('SELECT max(id) from myprofile')
-        if check is None:
-            userid = 6200
+        if check is True:
             for i in check:
                 userid = i[0] + 1
         else:
-            for i in check:
-                userid = i[0] + 1
-            return "Hello"
+            userid = 6200
+        return "Hello"
         newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename)
         db.session.add(newProfile)
         db.session.commit()
