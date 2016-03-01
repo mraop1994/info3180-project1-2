@@ -36,7 +36,7 @@
 
 {% block main %}
 <div class="content">
-    <img src="{{ url_for('static',filename=profile.image)}}"style="max-height:500px,max-width:500px">
+    <img src="{{ profile['image'] }}" width="250" height="250">
     <div class="c1">
         <h3 class=cols>{{profile.firstname}} {{profile.lastname}}</h3>
         <br/>

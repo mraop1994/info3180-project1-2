@@ -6,6 +6,8 @@ from wtforms.fields import TextField, FileField, SelectField # other fields incl
 from wtforms.validators import Required
 from app.models import Myprofile
 from app.forms import LoginForm
+from werkzeug.utils import secure_filename
+import random
 
 
 SECRET_KEY="super secure key"
@@ -54,13 +56,15 @@ def newprofile():
         sex = request.form['sex']
         age = request.form['age']
         form = ProfileForm(request.form)
-        imagename = request.files[form.image.name].read()
+        image = request.files['image']
         UPLOAD_FOLDER = "/app/static/uploads"
-        file = request.files[form.image.name]
-        filename = file.filename
-        file.save(os.path.join(os.getcwd() + UPLOAD_FOLDER, filename))
-        username = firstname[:2] + lastname + age
-        newProfile = Myprofile(firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=filename)
+        imagename = secure_filename(image.filename)
+        image.save(os.path.join(os.getcwd() + UPLOAD_FOLDER, imagename))
+        username = firstname[:1] + lastname + age + time.strftime("%Y")
+        check = db.session.execute('SELECT max(id) from myprofile')
+        for i in check:
+            userid = i[0] + 1
+        newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename)
         db.session.add(newProfile)
         db.session.commit()
         flash('New entry was successfully posted')
@@ -84,13 +88,13 @@ def profile_list():
 @app.route('/profile/<userid>')
 def profile_view(userid):
     timeinfo = time.strftime("%a, %b %d %Y")
-    profile = Myprofile.query.filter(Myprofile.id==userid).one()
-    image = "/static/uploads" + profile.image
+    profile = Myprofile.query.filter_by(id=userid).first()
+    image = url_for('static', filename='uploads/'+profile.image)
     if request.method == 'POST':
         return jsonify(id=profile.id,username=profile.username,image=image,sex=profile.sex, age=profile.age)
     else:
-        profile={'id': profile.id,'username': profile.username,'firstname':profile.firstname,'lastname':profile.lastname, 'sex': profile.sex, 'age': profile.age}
-        return render_template('profile_view.html',profile=profile,curr_date=timeinfo)
+        profile_vars = {'id':profile.id, 'username':profile.username, 'image':image, 'age':profile.age, 'firstname':profile.firstname, 'lastname':profile.lastname, 'sex':profile.sex}
+    return render_template('profile_view.html',profile=profile_vars,curr_date=timeinfo)
 
 
 @app.route('/about/')

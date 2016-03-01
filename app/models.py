@@ -1,12 +1,12 @@
 from . import db  
 class Myprofile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    firstname = db.Column(db.String(80), unique=False)
-    lastname = db.Column(db.String(80), unique=False)
-    sex = db.Column(db.String(10), unique=False)
-    age = db.Column(db.String(2), unique=False)
+    firstname = db.Column(db.String(80))
+    lastname = db.Column(db.String(80))
+    sex = db.Column(db.String(10))
+    age = db.Column(db.String(2))
     username = db.Column(db.String(20), unique=True)
-    image = db.Column(db.String(200), unique=True)
+    image = db.Column(db.String(200))
     
     def is_authenticated(self):
         return True
