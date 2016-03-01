@@ -59,7 +59,7 @@ def newprofile():
         image = request.files['image']
         UPLOAD_FOLDER = "/app/static/uploads"
         imagename = secure_filename(image.filename)
-        
+        timeinfo = time.strftime("%a, %b %d %Y")
         image.save(os.path.join(os.getcwd() + UPLOAD_FOLDER, imagename))
         username = firstname[:1] + lastname + age + time.strftime("%Y")
         check = db.session.execute('SELECT max(id) from myprofile')
@@ -68,7 +68,7 @@ def newprofile():
                 userid = i[0] + 1
         else:
             userid = 6200
-        newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename)
+        newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename, profile_add_on=timeinfo)
         db.session.add(newProfile)
         db.session.commit()
         flash('New entry was successfully posted')
@@ -91,11 +91,10 @@ def profile_list():
 
 @app.route('/profile/<userid>')
 def profile_view(userid):
-    timeinfo = time.strftime("%a, %b %d %Y")
     profile = Myprofile.query.filter_by(id=userid).first()
     image = url_for('static', filename='uploads/'+profile.image)
     if request.method == 'POST':
-        return jsonify(id=profile.id,username=profile.username,image=image,sex=profile.sex, age=profile.age, profile_add_on=timeinfo, high_score=profile.high_score, tdollars=profile.tdollars)
+        return jsonify(id=profile.id,username=profile.username,image=image,sex=profile.sex, age=profile.age, profile_add_on=profile.profile_add_on, high_score="", tdollars="")
     else:
         profile_vars = {'id':profile.id, 'username':profile.username, 'image':image, 'age':profile.age, 'firstname':profile.firstname, 'lastname':profile.lastname, 'sex':profile.sex, 'profile_add_on':date,'highscore': profile.high_score, 'tdollars': profile.tdollars}
     return render_template('profile_view.html',profile=profile_vars)
