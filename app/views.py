@@ -64,9 +64,9 @@ def newprofile():
         username = firstname[:1] + lastname + age + time.strftime("%Y")
         check = db.session.execute('SELECT max(id) from myprofile')
         if check is not None:
+            for i in check:
+                userid = i[0] + 1
             return "Hello"
-    #         for i in check:
-    #             userid = i[0] + 1
     #     else:
     #         userid = 6200
     #     newProfile = Myprofile(id=userid,firstname=firstname, lastname=lastname, sex=sex, age=age, username=username, image=imagename)
