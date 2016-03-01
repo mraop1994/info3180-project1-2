@@ -61,8 +61,8 @@ def newprofile():
         imagename = secure_filename(image.filename)
         
         image.save(os.path.join(os.getcwd() + UPLOAD_FOLDER, imagename))
+        username = firstname[:1] + lastname + age + time.strftime("%Y")
         return "Hello"
-    #     username = firstname[:1] + lastname + age + time.strftime("%Y")
     #     check = db.session.execute('SELECT max(id) from myprofile')
     #     if check is not None:
     #         for i in check:
